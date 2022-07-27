@@ -22,20 +22,30 @@ firomax is a dynamic programming model for maximizing the weekly revenue of a hy
 
 ## Installation
 
-You can install the development version of firomax from bitbucket with:
+You can install the development version of firomax from bitbucket using the following procedure:
 
-``` r
-# install.packages("devtools")
-devtools::install_bitbucket("turn652/firomax")
+1. Clone the repo to your local directory using `git clone ssh://git@stash.pnnl.gov:7999/~turn652/firomax.git`
+2. In R...
+
+
+```{r, eval = FALSE}
+devtools::install("path/to/cloned/repo")
+
+# or, if you already have tidyr, dplyr, and purrr installed, save time with:
+devtools::install("path/to/cloned/repo", dependencies = FALSE)
 ```
+
+3. Load as normal:
+```{r}
+library(firomax)
+```
+
 
 ## Example
 
 `firomax` contains an example set of inputs that are set as defaults in the `schedule_release` function:
 
 ```{r scedule_release}
-# load firomax
-library(firomax)
 
 # run firomax with default set of inputs
 firomax_output <- schedule_release()

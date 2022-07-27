@@ -1,7 +1,7 @@
 
 <!-- README.md is generated from README.Rmd. Please edit that file -->
 
-# Forecast Informed Reservoir Operations for Maximum hydroelectric power sales (firomax)
+# Forecast Informed Reservoir Operations for MAXimum hydroelectric power sales (firomax)
 
 <!-- badges: start -->
 <!-- badges: end -->
@@ -12,11 +12,24 @@ forecast, an inflow forecast, and an end of week storage target.
 
 ## Installation
 
-You can install the development version of firomax from bitbucket with:
+You can install the development version of firomax from bitbucket using
+the following procedure:
+
+1.  Clone the repo to your local directory using
+    `git clone ssh://git@stash.pnnl.gov:7999/~turn652/firomax.git`
+2.  In R…
 
 ``` r
-# install.packages("devtools")
-devtools::install_bitbucket("turn652/firomax")
+devtools::install("path/to/cloned/repo")
+
+# or, if you already have tidyr, dplyr, and purrr installed, save time with:
+devtools::install("path/to/cloned/repo", dependencies = FALSE)
+```
+
+3.  Load as normal:
+
+``` r
+library(firomax)
 ```
 
 ## Example
@@ -25,9 +38,6 @@ devtools::install_bitbucket("turn652/firomax")
 the `schedule_release` function:
 
 ``` r
-# load firomax
-library(firomax)
-
 # run firomax with default set of inputs
 firomax_output <- schedule_release()
 
@@ -148,7 +158,7 @@ plot_firomax_output(output_tables = output_tables)
 #> Warning: Removed 4 row(s) containing missing values (geom_path).
 ```
 
-<img src="man/figures/README-unnamed-chunk-3-1.png" width="100%" />
+<img src="man/figures/README-unnamed-chunk-5-1.png" width="100%" />
 
 `firomax` has three modes of operation: *fixed*, *adaptive*, and
 *rolling adaptive*. Fixed operations (the default) …
