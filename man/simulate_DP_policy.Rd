@@ -23,6 +23,30 @@ simulate_DP_policy(
 \arguments{
 \item{n_periods}{number of sub-daily periods}
 
+\item{release_policy}{release policy}
+
+\item{R_disc_x}{release discretization}
+
+\item{R}{release vector}
+
+\item{Q}{inflow vector}
+
+\item{S}{storage vector}
+
+\item{S_cap}{storage capacity constant}
+
+\item{S_states}{storage states}
+
+\item{Spill}{spill vector}
+
+\item{price_forecast}{price forecast}
+
+\item{MWh_per_MCM}{energy value of release}
+
+\item{Revenue}{revenue vector}
+
+\item{t_to_day}{timestep to day of week conversion}
+
 \item{Policy}{placeholder matrix for release policy}
 }
 \description{

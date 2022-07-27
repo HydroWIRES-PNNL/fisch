@@ -23,19 +23,27 @@ DP(
 \arguments{
 \item{n_periods}{number of sub-daily periods}
 
+\item{inflow_forecast}{inflow forecast}
+
 \item{S_upper_limit}{upper limit of storage}
 
 \item{S_lower_limit}{lower limit of storage}
 
 \item{R_disc_x}{release discretization}
 
-\item{State_mat}{storage state matric}
+\item{State_mat}{storage state matrix}
+
+\item{S_end_state}{storage end state}
+
+\item{price_forecast}{price forecast}
 
 \item{Rev_to_go}{placeholder matrix for revenue to go}
 
 \item{Bellman}{placeholder matrix for Bellman's function}
 
 \item{Policy}{placeholder matrix for release policy}
+
+\item{use_storage_target}{T/F on whether to use storage target}
 
 \item{S_States}{storage stages}
 }
