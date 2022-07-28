@@ -12,10 +12,11 @@ schedule_release(
   MWh_per_MCM = TEST_MWh_per_MCM,
   initial_storage = TEST_initial_storage,
   reservoir_capacity = TEST_reservoir_capacity,
+  storage_lower_limit = NULL,
   target_end_of_week_storage = TEST_target_end_of_week_storage,
   max_release = TEST_max_release,
   min_release = TEST_min_release,
-  discretization_step = 0.1,
+  discretization_step = 0.2,
   use_storage_target = TRUE
 )
 }
@@ -26,9 +27,11 @@ schedule_release(
 
 \item{inflow_forecast}{inflow forecast with daily updating and same resolution as inflow. If NULL, perfect forecast is applied.}
 
-\item{initial_storage}{storage level at start of week.}
+\item{initial_storage}{storage level at start of week. If using "single_both" mode, two initial storage values may be supplied in order "fixed", "adaptive".}
 
-\item{reservoir_capacity}{res}
+\item{reservoir_capacity}{reservoir capacity}
+
+\item{storage_lower_limit}{lower limit of evaluated storage. If NULL (default) this is calculated using initial storage.}
 
 \item{target_end_of_week_storage}{storage level targeted for end of week}
 

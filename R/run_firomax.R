@@ -6,12 +6,13 @@
 #' @param inflow_forecast inflow forecast with daily updating and same resolution as inflow. If NULL, perfect forecast is applied.
 #' @param price_foreacst price forecast with same temporal resolution as inflow.
 #' @param release_value power value of turbined water in MWh per MCM.
-#' @param initial_storage storage level at start of week.
-#' @param reservoir_capacity res
+#' @param initial_storage storage level at start of week. If using "single_both" mode, two initial storage values may be supplied in order "fixed", "adaptive".
+#' @param reservoir_capacity reservoir capacity
+#' @param storage_lower_limit lower limit of evaluated storage. If NULL (default) this is calculated using initial storage.
 #' @param target_end_of_week_storage storage level targeted for end of week
 #' @param max_release maximum
 #' @param min_release minimum
-#' @param discretization_step default 0.1 (allowable levels 0.0001, 0.001, 0.01, 0.1, 1, 10)
+#' @param discretization_step default 0.2. Other water volume variables (inflow, inflow_forecast, reservoir_capacity, etc.) must all be discretized at this level.
 #' @param use_storage_target T/F
 #' @import dplyr
 #' @import purrr
@@ -25,60 +26,84 @@ schedule_release <-  function(mode = "single_fixed",
                               MWh_per_MCM = TEST_MWh_per_MCM,
                               initial_storage = TEST_initial_storage,
                               reservoir_capacity = TEST_reservoir_capacity,
+                              storage_lower_limit = NULL,
                               target_end_of_week_storage = TEST_target_end_of_week_storage,
                               max_release = TEST_max_release,
                               min_release = TEST_min_release,
-                              discretization_step = 0.1,
+                              discretization_step = 0.2,
                               use_storage_target = TRUE){
 
   length(inflow) -> n_periods
   stopifnot(length(price_forecast) == n_periods)
-  stopifnot(discretization_step %in% c(0.0001, 0.001, 0.01, 0.1, 1, 10))
+
+  # is policy single or rolling horizon?
+  policy_opt <- strsplit(mode, "_")[[1]][1]
+
+  # duel simulation with single and adaptive modes?
+  duel_sim <- (strsplit(mode, "_")[[1]][2] == "both")
+  #if (duel_sim & length(initial_storage) == 1) initial_storage = c(initial_storage, initial_storage)
+
+  inflow_forecast_max_by_step <- apply(inflow_forecast, 2, function(x) max(x, na.rm = T))
+  inflow_forecast_min_by_step <- apply(inflow_forecast, 2, function(x) min(x, na.rm = T))
+  max_in <- max(sum(inflow), sum(inflow_forecast_max_by_step))
+  min_in <- min(sum(inflow), sum(inflow_forecast_min_by_step))
+  max_out <- n_periods * max_release
+
+  # test to ensure that all data are supplied with compatible discretization
+  discretization_grid <- seq(0,
+                             max(c(reservoir_capacity, max_in, max_out)),
+                             discretization_step)
+
+  # use custom `%.in%` function to avoid machine tolerance errors
+  # (see 'helpers.R' for function definition)
+
+  stopifnot(max_release %.in% discretization_grid)
+  stopifnot(min_release %.in% discretization_grid)
+  stopifnot(all(sapply(initial_storage, function(x) x %.in% discretization_grid)))
+  stopifnot(reservoir_capacity %.in% discretization_grid)
+  stopifnot(all(sapply(inflow, function(x) x %.in% discretization_grid)))
+  stopifnot(all(sapply(inflow_forecast[!is.na(inflow_forecast)],
+                       function(x) x %.in% discretization_grid)))
+  stopifnot(target_end_of_week_storage %.in% discretization_grid)
 
   # set up discretization for release and storage
 
-  rounding_level <- case_when(
-    discretization_step == 10 ~ -1L,
-    discretization_step == 1 ~ 0L,
-    discretization_step == 0.1 ~ 1L,
-    discretization_step == 0.01 ~ 2L,
-    discretization_step == 0.001 ~ 3L,
-    discretization_step == 0.0001 ~ 4L
-  )
+  # rounding_level <- case_when(
+  #   discretization_step == 10 ~ -1L,
+  #   discretization_step == 1 ~ 0L,
+  #   discretization_step == 0.1 ~ 1L,
+  #   discretization_step == 0.01 ~ 2L,
+  #   discretization_step == 0.001 ~ 3L,
+  #   discretization_step == 0.0001 ~ 4L
+  # )
+  #
+  # inflow <- round(inflow, rounding_level)
+  # inflow_forecast <- round(inflow_forecast, rounding_level)
 
-  inflow <- round(inflow, rounding_level)
-  inflow_forecast <- round(inflow_forecast, rounding_level)
+  # reduce computational burden by analyzing feasible storage range...
+  # ... for week (rather than entire storage range)
 
-  max_in <- max(sum(inflow),
-                sum(apply(inflow_forecast, 2, function(x) max(x, na.rm = T))))
-  min_in <- min(sum(inflow),
-                sum(apply(inflow_forecast, 2, function(x) min(x, na.rm = T))))
-  max_out <- n_periods * max_release
-  min_out <- 0 #n_periods * min_release
-
-
-  S_upper_limit <- min(initial_storage + max_in, #- min_out,
+  S_upper_limit <- min(initial_storage + max_in,
                        reservoir_capacity)
 
-  S_lower_limit <- min(max(initial_storage - max_out, 0), initial_storage)
-
-  ## need to deal with this!
-  target_end_of_week_storage <- round(min(target_end_of_week_storage,
-                                    S_upper_limit), rounding_level)
+  if(is.null(storage_lower_limit)){
+    S_lower_limit <- min(max(initial_storage - max_out, 0), initial_storage)
+  }else{
+    S_lower_limit <- storage_lower_limit
+  }
 
   if(S_upper_limit < target_end_of_week_storage) S_upper_limit <- target_end_of_week_storage
   if(S_lower_limit > target_end_of_week_storage) S_lower_limit <- target_end_of_week_storage
 
-
   R_disc_x <- seq(min_release, max_release, discretization_step)
   S_states <- seq(S_lower_limit, S_upper_limit, discretization_step)
-  S_end_state <- which(round(S_states, rounding_level) == target_end_of_week_storage)
+  S_end_state <- which(near(S_states, target_end_of_week_storage))
 
   State_mat_skeleton <- matrix(0, nrow = length(S_states), ncol = length(R_disc_x))
   State_mat_S <- apply(State_mat_skeleton, 2, "+", S_states)
   State_mat <- t(apply(State_mat_S, 1, "-", R_disc_x))
 
-  if(mode %in% c("single_fixed", "single_adaptive")){
+  if(policy_opt == "single"){
 
     if(nrow(inflow_forecast) > 1){
       inflow_forecast <- inflow_forecast[1,]
@@ -140,7 +165,13 @@ schedule_release <-  function(mode = "single_fixed",
 
   # SIMULATE POLICY--------------------------------------------------------------------
 
-  if(mode == "single_fixed") {
+  if(mode == "single_fixed" | mode == "single_both") {
+
+    if(duel_sim){
+      initial_storage_ <- initial_storage[1]
+    }else{
+      initial_storage_ <- initial_storage
+    }
 
     # double simulation required...
     # First simulation determines release schedule assuming forecasted inflow
@@ -150,7 +181,7 @@ schedule_release <-  function(mode = "single_fixed",
       release_policy = rep(list(release_policy), 7),
       R_disc_x = R_disc_x,
       S_states = S_states,
-      S = c(initial_storage, vector("numeric", n_periods)),
+      S = c(initial_storage_, vector("numeric", n_periods)),
       S_cap = reservoir_capacity,
       R = vector("numeric", n_periods),
       Spill = vector("numeric", n_periods),
@@ -167,7 +198,7 @@ schedule_release <-  function(mode = "single_fixed",
       release_policy = sim_for_release[["release_turbine"]],
       R_disc_x = R_disc_x,
       S_states = S_states,
-      S = c(initial_storage, vector("numeric", n_periods)),
+      S = c(initial_storage_, vector("numeric", n_periods)),
       S_cap = reservoir_capacity,
       R = vector("numeric", n_periods),
       Spill = vector("numeric", n_periods),
@@ -175,18 +206,25 @@ schedule_release <-  function(mode = "single_fixed",
       MWh_per_MCM = MWh_per_MCM,
       Revenue = vector("numeric", n_periods),
       t_to_day = tibble(t = 1:n_periods,day = rep(1:7, each = (n_periods / 7)))
-    ) -> schedule
+    ) -> schedule_fixed
 
   }
 
-  if(mode == "single_adaptive"){
+  if(mode == "single_adaptive" | mode == "single_both"){
+
+    if(duel_sim){
+      initial_storage_ <- initial_storage[2]
+    }else{
+      initial_storage_ <- initial_storage
+    }
+
     simulate_DP_policy(
       n_periods = n_periods,
       Q = inflow,
       release_policy = rep(list(release_policy), 7),
       R_disc_x = R_disc_x,
       S_states = S_states,
-      S = c(initial_storage, vector("numeric", n_periods)),
+      S = c(initial_storage_, vector("numeric", n_periods)),
       S_cap = reservoir_capacity,
       R = vector("numeric", n_periods),
       Spill = vector("numeric", n_periods),
@@ -194,7 +232,7 @@ schedule_release <-  function(mode = "single_fixed",
       MWh_per_MCM = MWh_per_MCM,
       Revenue = vector("numeric", n_periods),
       t_to_day = tibble(t = 1:n_periods, day = rep(1:7, each = (n_periods / 7)))
-    ) -> schedule
+    ) -> schedule_adaptive
   }
 
   if(mode == "rolling_adaptive"){
@@ -216,6 +254,23 @@ schedule_release <-  function(mode = "single_fixed",
   }
 
   # ===================================================================================
+
+  if(mode == "single_fixed"){
+    return(schedule_fixed)
+  }
+
+  if(mode == "single_adaptive"){
+    return(schedule_adaptive)
+  }
+
+  if(mode == "single_both"){
+    return(
+      bind_rows(
+        schedule_fixed %>% mutate(mode = "fixed"),
+        schedule_adaptive %>% mutate(mode = "adaptive")
+      )
+    )
+  }
 
   return(schedule)
 
