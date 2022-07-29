@@ -7,3 +7,6 @@ src/*.so
 src/*.dll
 .DS_Store
 firomax.Rproj
+inst/doc
+/doc/
+/Meta/
