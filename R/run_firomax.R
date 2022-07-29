@@ -8,7 +8,7 @@
 #' @param release_value power value of turbined water in MWh per MCM.
 #' @param initial_storage storage level at start of week. If using "single_both" mode, two initial storage values may be supplied in order "fixed", "adaptive".
 #' @param reservoir_capacity reservoir capacity
-#' @param storage_lower_limit lower limit of evaluated storage. If NULL (default) this is calculated using initial storage.
+#' @param storage_limits lower and upper limits of evaluated storage. If NULL (default) this is calculated using initial storage.
 #' @param target_end_of_week_storage storage level targeted for end of week
 #' @param max_release maximum
 #' @param min_release minimum
@@ -26,7 +26,7 @@ schedule_release <-  function(mode = "single_fixed",
                               MWh_per_MCM = TEST_MWh_per_MCM,
                               initial_storage = TEST_initial_storage,
                               reservoir_capacity = TEST_reservoir_capacity,
-                              storage_lower_limit = NULL,
+                              storage_limits = NULL,
                               target_end_of_week_storage = TEST_target_end_of_week_storage,
                               max_release = TEST_max_release,
                               min_release = TEST_min_release,
@@ -41,7 +41,6 @@ schedule_release <-  function(mode = "single_fixed",
 
   # duel simulation with single and adaptive modes?
   duel_sim <- (strsplit(mode, "_")[[1]][2] == "both")
-  #if (duel_sim & length(initial_storage) == 1) initial_storage = c(initial_storage, initial_storage)
 
   inflow_forecast_max_by_step <- apply(inflow_forecast, 2, function(x) max(x, na.rm = T))
   inflow_forecast_min_by_step <- apply(inflow_forecast, 2, function(x) min(x, na.rm = T))
@@ -56,6 +55,7 @@ schedule_release <-  function(mode = "single_fixed",
 
   # use custom `%.in%` function to avoid machine tolerance errors
   # (see 'helpers.R' for function definition)
+  if(duel_sim) stopifnot(length(initial_storage) == 2)
 
   stopifnot(max_release %.in% discretization_grid)
   stopifnot(min_release %.in% discretization_grid)
@@ -66,30 +66,15 @@ schedule_release <-  function(mode = "single_fixed",
                        function(x) x %.in% discretization_grid)))
   stopifnot(target_end_of_week_storage %.in% discretization_grid)
 
-  # set up discretization for release and storage
-
-  # rounding_level <- case_when(
-  #   discretization_step == 10 ~ -1L,
-  #   discretization_step == 1 ~ 0L,
-  #   discretization_step == 0.1 ~ 1L,
-  #   discretization_step == 0.01 ~ 2L,
-  #   discretization_step == 0.001 ~ 3L,
-  #   discretization_step == 0.0001 ~ 4L
-  # )
-  #
-  # inflow <- round(inflow, rounding_level)
-  # inflow_forecast <- round(inflow_forecast, rounding_level)
-
   # reduce computational burden by analyzing feasible storage range...
   # ... for week (rather than entire storage range)
 
-  S_upper_limit <- min(initial_storage + max_in,
-                       reservoir_capacity)
-
-  if(is.null(storage_lower_limit)){
+  if(is.null(storage_limits)){
     S_lower_limit <- min(max(initial_storage - max_out, 0), initial_storage)
+    S_upper_limit <- min(initial_storage + max_in, reservoir_capacity)
   }else{
-    S_lower_limit <- storage_lower_limit
+    S_lower_limit <- storage_limits[1]
+    S_upper_limit <- storage_limits[2]
   }
 
   if(S_upper_limit < target_end_of_week_storage) S_upper_limit <- target_end_of_week_storage
