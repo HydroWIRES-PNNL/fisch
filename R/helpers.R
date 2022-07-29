@@ -25,3 +25,18 @@ snap_to_disc <- function(x, discretization_step){
     sapply(x, snap_to_disc, discretization_step = discretization_step)
   }
 }
+
+#' convert_forecast_to_firomax_format
+#'
+#' @description Prepare model inputs by snapping to desired disretization level.
+#' @param forecast vector of forecasted inflows of length equal to length(inflow)
+#' @export
+#'
+convert_forecast_to_firomax_format <- function(forecast){
+    matrix(
+    c(inflow, rep(NA, 6 * length(forecast))),
+    nrow = 7, byrow = TRUE
+  )
+}
+
+
