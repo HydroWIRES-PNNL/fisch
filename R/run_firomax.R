@@ -82,7 +82,15 @@ schedule_release <-  function(mode = "single_fixed",
 
   R_disc_x <- seq(min_release, max_release, discretization_step)
   S_states <- seq(S_lower_limit, S_upper_limit, discretization_step)
-  S_end_state <- which(near(S_states, target_end_of_week_storage))
+
+  # catch issue of expanded sequence missing capacity value
+
+  if(near(S_upper_limit, last(S_states))){
+    S_end_state <- which(near(S_states, target_end_of_week_storage))
+  }else{
+    S_states <- c(S_states, S_upper_limit)
+    S_end_state <- which(near(S_states, target_end_of_week_storage))
+  }
 
   State_mat_skeleton <- matrix(0, nrow = length(S_states), ncol = length(R_disc_x))
   State_mat_S <- apply(State_mat_skeleton, 2, "+", S_states)
