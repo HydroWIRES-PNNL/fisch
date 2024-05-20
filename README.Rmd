@@ -1,0 +1,147 @@
+---
+output: github_document
+---
+
+<!-- README.md is generated from README.Rmd. Please edit that file -->
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  fig.path = "man/figures/README-",
+  out.width = "100%"
+)
+```
+
+# Forecast Informed Scheduler for Hydropower (FIScH)
+
+<!-- badges: start -->
+<!-- badges: end -->
+
+FIScH is a dynamic programming model for maximizing the weekly revenue of a hydropower plant by scheduling water release using a price forecast, an inflow forecast, and an end of week storage target.
+
+## Installation - TODO UPDATE
+
+You can install the development version of FIScH from bitbucket using the following procedure:
+
+1. Clone the repo to your local directory using `git clone ssh://git@stash.pnnl.gov:7999/~turn652/firomax.git`
+2. In R...
+
+
+```{r, eval = FALSE}
+devtools::install("path/to/cloned/repo")
+
+# or, if you already have tidyr, dplyr, and purrr installed, save time with:
+devtools::install("path/to/cloned/repo", dependencies = FALSE)
+```
+
+3. Load as normal:
+```{r}
+library(firomax)
+```
+
+
+## Example
+
+`FIScH` contains an example set of inputs that are set as defaults in the `schedule_release` function:
+
+```{r scedule_release}
+
+# run FIScH with default set of inputs
+firomax_output <- schedule_release()
+
+# view output
+firomax_output
+```
+
+Although `FIScH` does not include any visualization functions, the output table is designed to be easily processed using `ggplot2`. The following function is recommended for comparing multiple `FIScH` runs in a single display.
+
+```{r}
+library(ggplot2) # for plotting
+library(patchwork) # for combining plots
+
+plot_firomax_output <- function(output_tables){
+
+  # convert output to long form for plotting
+  output_tables %>%
+    tidyr::gather(variable, value, -time, -run) %>%
+    tidyr::separate(variable, into = c("variable", "data")) %>%
+    mutate(time = time - 1) -> data_for_plot
+
+  # inflow plot
+  data_for_plot %>%
+    filter(variable == "inflow") %>%
+    ggplot(aes(time, value, col = run)) + geom_line() +
+    theme_minimal() +
+    theme(legend.position = "none") +
+    labs(title = "Inflow (MCM)", y = NULL, x = NULL) +
+    scale_x_continuous(breaks = seq(0, 28, 4)) ->
+    inflow_plot
+
+  # price plot
+  data_for_plot %>% filter(variable == "price") %>%
+    select(time, data, value) %>% unique() %>%
+    ggplot(aes(time, value)) + geom_line(col = "red") +
+    theme_minimal() +
+    theme(legend.position = "none") +
+    labs (title = "Price ($/MWh)", y = NULL, x = NULL) +
+    scale_x_continuous(breaks = seq(0, 28, 4)) ->
+    price_plot
+
+  # release plot
+  data_for_plot %>%
+    filter(variable == "release") %>%
+    ggplot(aes(time, value, col = run, linetype = data)) + geom_line() +
+    theme_minimal() +
+    theme(legend.position = "none") +
+    labs (title = "Release (- - -) and spill (MCM)", y = NULL, x = NULL) +
+    scale_x_continuous(breaks = seq(0, 28, 4)) ->
+    release_plot
+
+
+  data_for_plot %>%
+    filter(variable == "storage") %>%
+    ggplot(aes(time, value, col = run)) + geom_line() +
+    theme_minimal() +
+    geom_point(data = tibble(time = 28, value = firomax:::TEST_target_end_of_week_storage),
+               aes(col = NA), size = 7, pch = 4, col = "black") +
+    theme(legend.position = "none") +
+    labs (title = "Storage (MCM)", y = NULL, x = NULL) +
+    scale_x_continuous(breaks = seq(0, 28, 4)) ->
+    storage_plot
+
+
+  data_for_plot %>% filter(variable == "benefit") %>%
+    tidyr::replace_na(list(value = 0)) %>%
+    group_by(run) %>% mutate(value = cumsum(value)) %>%
+    ggplot(aes(time, value, col = run)) + geom_line() +
+    theme_minimal() +
+    theme(legend.position = "bottom") +
+    labs (title = "Cumulative revenue ($)", y = NULL, x = NULL) +
+    scale_x_continuous(breaks = seq(0, 28, 4)) ->
+    rev_plot
+
+  inflow_plot + price_plot + release_plot + storage_plot + rev_plot +
+    plot_layout(ncol = 1)
+}
+```
+
+
+```{r}
+library(dplyr)
+
+schedule_release(max_release = 10, min_release = 0) -> firomax_output_2
+
+bind_rows(
+  firomax_output %>% mutate(run = "default"),
+  firomax_output_2 %>% mutate(run = "flexible release")
+) -> output_tables
+
+plot_firomax_output(output_tables = output_tables)
+
+
+```
+
+
+
+`FIScH` has three modes of operation: *fixed*, *adaptive*, and *rolling adaptive*. Fixed operations (the default) ...

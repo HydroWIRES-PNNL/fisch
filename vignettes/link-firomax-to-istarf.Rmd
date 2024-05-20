@@ -1,0 +1,86 @@
+---
+title: "How to link firomax to an ISTARF weekly reservoir policy"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{How to link firomax to ISTARF weekly reservoir policy}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+## General approach
+
+`firomax` can be run sequentially across multiple weeks by plugging the end storage from one week's simulation into initial storage for the next week. The following example illustrates one possible way of achieving a multi-week simulation with this approach. The example is unrealistic in the sense that the same inflow, prices, and forecasts are repeated each week; the intention is solely to demonstrate how one can link sequential firomax solutions for multiweek simulation through storage.
+
+```{r setup}
+library(firomax)
+library(dplyr)
+library(ggplot2)
+
+# 1. Set up a table of initial conditions (matching headers in firomax output)
+
+tibble(
+  time = 0,
+  storage_sim = 800,  # THIS WILL BE INITIAL STORAGE
+  release_spill = NA_real_,
+  release_turbine = NA_real_,
+  benefit_revenue = NA_real_,
+  price_price = NA_real_,
+  week = NA_integer_
+) ->
+  simulation_table
+
+# this table will be expanded down with each week's simulation
+
+# 2. Set some end of week storage targets
+
+targets = c(800, 790, 800)
+
+# 3. Simulate with for loop
+
+for(week in 1:3){
+  
+  # get initial storage from simulation table
+  s1 <- simulation_table[["storage_sim"]] %>% last()
+  
+  # replace the simulation table with exanded table
+  bind_rows(
+    simulation_table,
+    schedule_release(initial_storage = s1,
+                     target_end_of_week_storage = targets[week]) %>% 
+      mutate(week = !!week)
+  ) -> simulation_table
+
+}
+
+# look at final output
+head(simulation_table)
+
+# plot storage:
+simulation_table %>% 
+  filter(time %in% 1:28) %>% 
+  ggplot(aes(time, storage_sim)) +
+  geom_line() + facet_wrap(~week)
+
+```
+
+## Linking to an ISTARF simulation
+
+Using the above approach, `firomax` can be linked to a weekly reservoir simulation based on reservoir rules provided by the Inferred Storage Targets and Release Functions dataset [https://zenodo.org/record/4602277#.YuRaGC-B1z8](ISTARF-CONUS).
+
+
+
+
+
+
+
+
+
+
+
