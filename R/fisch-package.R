@@ -1,2 +1,3 @@
-#' @keywords internal
+#' @docType package
+#' @name fisch
 "_PACKAGE"
