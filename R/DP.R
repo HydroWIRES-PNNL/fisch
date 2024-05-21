@@ -66,7 +66,6 @@ DP <- function(n_periods,
   return(Policy)
 }
 
-
 #' simulate_DP_policy
 #'
 #' @description Simulate the week-ahead
@@ -84,7 +83,7 @@ DP <- function(n_periods,
 #' @param Revenue revenue vector
 #' @param t_to_day timestep to day of week conversion
 #' @param Policy placeholder matrix for release policy
-#'
+
 simulate_DP_policy <- function(
     n_periods,
     release_policy,
@@ -164,4 +163,3 @@ simulate_DP_policy <- function(
   )
 
 }
-

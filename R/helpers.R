@@ -5,8 +5,6 @@
   any(abs(b-a) <= eps)
 }
 
-
-
 #' snap_to_disc
 #'
 #' @description Prepare model inputs by snapping to desired disretization level.
@@ -38,5 +36,3 @@ convert_forecast_to_fisch_format <- function(forecast){
     nrow = 7, byrow = TRUE
   )
 }
-
-
