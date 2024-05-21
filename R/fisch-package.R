@@ -2,6 +2,6 @@
 "_PACKAGE"
 
 ## usethis namespace: start
-#' @useDynLib firomax, .registration = TRUE
+#' @useDynLib fisch, .registration = TRUE
 ## usethis namespace: end
 NULL

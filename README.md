@@ -1,22 +1,22 @@
 
 <!-- README.md is generated from README.Rmd. Please edit that file -->
 
-# Forecast Informed Reservoir Operations for MAXimum hydroelectric power sales (firomax)
+# Forecast Informed Reservoir Operations for MAXimum hydroelectric power sales (fisch)
 
 <!-- badges: start -->
 <!-- badges: end -->
 
-firomax is a dynamic programming model for maximizing the weekly revenue
+fisch is a dynamic programming model for maximizing the weekly revenue
 of a hydropower plant by scheduling water release using a price
 forecast, an inflow forecast, and an end of week storage target.
 
 ## Installation
 
-You can install the development version of firomax from bitbucket using
+You can install the development version of fisch from bitbucket using
 the following procedure:
 
 1.  Clone the repo to your local directory using
-    `git clone ssh://git@stash.pnnl.gov:7999/~turn652/firomax.git`
+    `git clone ssh://git@stash.pnnl.gov:7999/~turn652/fisch.git`
 2.  In R…
 
 ``` r
@@ -29,20 +29,20 @@ devtools::install("path/to/cloned/repo", dependencies = FALSE)
 3.  Load as normal:
 
 ``` r
-library(firomax)
+library(fisch)
 ```
 
 ## Example
 
-`firomax` contains an example set of inputs that are set as defaults in
+`fisch` contains an example set of inputs that are set as defaults in
 the `schedule_release` function:
 
 ``` r
-# run firomax with default set of inputs
-firomax_output <- schedule_release()
+# run fisch with default set of inputs
+fisch_output <- schedule_release()
 
 # view output
-firomax_output
+fisch_output
 #> # A tibble: 29 × 7
 #>     time storage_sim release_spill release_turbine benefit_revenue price_price
 #>    <int>       <dbl>         <dbl>           <dbl>           <dbl>       <dbl>
@@ -59,16 +59,16 @@ firomax_output
 #> # … with 19 more rows, and 1 more variable: inflow_actual <dbl>
 ```
 
-Although `firomax` does not include any visualization functions, the
+Although `fisch` does not include any visualization functions, the
 output table is designed to be easily processed using `ggplot2`. The
-following function is recommended for comparing multiple `firomax` runs
+following function is recommended for comparing multiple `fisch` runs
 in a single display.
 
 ``` r
 library(ggplot2) # for plotting
 library(patchwork) # for combining plots
 
-plot_firomax_output <- function(output_tables){
+plot_fisch_output <- function(output_tables){
   
   # convert output to long form for plotting
   output_tables %>% 
@@ -111,7 +111,7 @@ plot_firomax_output <- function(output_tables){
     filter(variable == "storage") %>%
     ggplot(aes(time, value, col = run)) + geom_line() +
     theme_minimal() +
-    geom_point(data = tibble(time = 28, value = firomax:::TEST_target_end_of_week_storage),
+    geom_point(data = tibble(time = 28, value = fisch:::TEST_target_end_of_week_storage),
                aes(col = NA), size = 7, pch = 4, col = "black") +
     theme(legend.position = "none") +
     labs (title = "Storage (MCM)", y = NULL, x = NULL) +
@@ -145,14 +145,14 @@ library(dplyr)
 #> 
 #>     intersect, setdiff, setequal, union
 
-schedule_release(max_release = 10, min_release = 0) -> firomax_output_2
+schedule_release(max_release = 10, min_release = 0) -> fisch_output_2
 
 bind_rows(
-  firomax_output %>% mutate(run = "default"),
-  firomax_output_2 %>% mutate(run = "flexible release")
+  fisch_output %>% mutate(run = "default"),
+  fisch_output_2 %>% mutate(run = "flexible release")
 ) -> output_tables
 
-plot_firomax_output(output_tables = output_tables)
+plot_fisch_output(output_tables = output_tables)
 #> Warning: Removed 2 row(s) containing missing values (geom_path).
 #> Warning: Removed 1 row(s) containing missing values (geom_path).
 #> Warning: Removed 4 row(s) containing missing values (geom_path).
@@ -160,5 +160,5 @@ plot_firomax_output(output_tables = output_tables)
 
 <img src="man/figures/README-unnamed-chunk-5-1.png" width="100%" />
 
-`firomax` has three modes of operation: *fixed*, *adaptive*, and
+`fisch` has three modes of operation: *fixed*, *adaptive*, and
 *rolling adaptive*. Fixed operations (the default) …

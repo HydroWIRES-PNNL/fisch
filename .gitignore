@@ -6,7 +6,7 @@ src/*.o
 src/*.so
 src/*.dll
 .DS_Store
-firomax.Rproj
+fisch.Rproj
 inst/doc
 /doc/
 /Meta/

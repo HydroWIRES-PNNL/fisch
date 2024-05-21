@@ -1,8 +1,8 @@
 ---
-title: "How to link firomax to an ISTARF weekly reservoir policy"
+title: "How to link fisch to an ISTARF weekly reservoir policy"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{How to link firomax to ISTARF weekly reservoir policy}
+  %\VignetteIndexEntry{How to link fisch to ISTARF weekly reservoir policy}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
@@ -16,14 +16,14 @@ knitr::opts_chunk$set(
 
 ## General approach
 
-`firomax` can be run sequentially across multiple weeks by plugging the end storage from one week's simulation into initial storage for the next week. The following example illustrates one possible way of achieving a multi-week simulation with this approach. The example is unrealistic in the sense that the same inflow, prices, and forecasts are repeated each week; the intention is solely to demonstrate how one can link sequential firomax solutions for multiweek simulation through storage.
+`fisch` can be run sequentially across multiple weeks by plugging the end storage from one week's simulation into initial storage for the next week. The following example illustrates one possible way of achieving a multi-week simulation with this approach. The example is unrealistic in the sense that the same inflow, prices, and forecasts are repeated each week; the intention is solely to demonstrate how one can link sequential fisch solutions for multiweek simulation through storage.
 
 ```{r setup}
-library(firomax)
+library(fisch)
 library(dplyr)
 library(ggplot2)
 
-# 1. Set up a table of initial conditions (matching headers in firomax output)
+# 1. Set up a table of initial conditions (matching headers in fisch output)
 
 tibble(
   time = 0,
@@ -72,7 +72,7 @@ simulation_table %>%
 
 ## Linking to an ISTARF simulation
 
-Using the above approach, `firomax` can be linked to a weekly reservoir simulation based on reservoir rules provided by the Inferred Storage Targets and Release Functions dataset [https://zenodo.org/record/4602277#.YuRaGC-B1z8](ISTARF-CONUS).
+Using the above approach, `fisch` can be linked to a weekly reservoir simulation based on reservoir rules provided by the Inferred Storage Targets and Release Functions dataset [https://zenodo.org/record/4602277#.YuRaGC-B1z8](ISTARF-CONUS).
 
 
 

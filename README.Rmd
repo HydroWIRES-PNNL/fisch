@@ -13,45 +13,48 @@ knitr::opts_chunk$set(
 )
 ```
 
-# Forecast Informed Scheduler for Hydropower (FIScH)
+# Forecast Informed Scheduler for Hydropower (fisch)
 
 <!-- badges: start -->
 <!-- badges: end -->
 
-FIScH is a dynamic programming model for maximizing the weekly revenue of a hydropower plant by scheduling water release using a price forecast, an inflow forecast, and an end of week storage target.
+fisch is a hydropower scheduler that optimizes hourly releases within a week to maximize
+hydropower revenue. Dynamic programing is used to identify the optimal release schedule given
+hourly electricity prices, hourly inflow, and an end-of-week storage target that parameterizes
+non-powered objectives and constraints.
 
-## Installation - TODO UPDATE
+## Installation
 
-You can install the development version of FIScH from bitbucket using the following procedure:
+You can install the development version of fisch from GitHub:
 
-1. Clone the repo to your local directory using `git clone ssh://git@stash.pnnl.gov:7999/~turn652/firomax.git`
-2. In R...
+1. Install the `devtools` package `install.packages("devtools")`
+2. Load the package `library(devtools)`
+3. Install `fisch` from GitHub `install_github("HydroWIRES-PNNL/fisch")`
 
 
 ```{r, eval = FALSE}
-devtools::install("path/to/cloned/repo")
-
-# or, if you already have tidyr, dplyr, and purrr installed, save time with:
-devtools::install("path/to/cloned/repo", dependencies = FALSE)
+install.packages("devtools")
+library(devtools)
+install_github("HydroWIRES-PNNL/fisch")
 ```
 
 3. Load as normal:
 ```{r}
-library(firomax)
+library(fisch)
 ```
 
 
 ## Example
 
-`FIScH` contains an example set of inputs that are set as defaults in the `schedule_release` function:
+`fisch` contains an example set of inputs that are set as defaults in the `schedule_release` function:
 
 ```{r scedule_release}
 
 # run FIScH with default set of inputs
-firomax_output <- schedule_release()
+fisch_output <- schedule_release()
 
 # view output
-firomax_output
+fisch_output
 ```
 
 Although `FIScH` does not include any visualization functions, the output table is designed to be easily processed using `ggplot2`. The following function is recommended for comparing multiple `FIScH` runs in a single display.
@@ -60,7 +63,7 @@ Although `FIScH` does not include any visualization functions, the output table 
 library(ggplot2) # for plotting
 library(patchwork) # for combining plots
 
-plot_firomax_output <- function(output_tables){
+plot_fisch_output <- function(output_tables){
 
   # convert output to long form for plotting
   output_tables %>%
@@ -103,7 +106,7 @@ plot_firomax_output <- function(output_tables){
     filter(variable == "storage") %>%
     ggplot(aes(time, value, col = run)) + geom_line() +
     theme_minimal() +
-    geom_point(data = tibble(time = 28, value = firomax:::TEST_target_end_of_week_storage),
+    geom_point(data = tibble(time = 28, value = fisch:::TEST_target_end_of_week_storage),
                aes(col = NA), size = 7, pch = 4, col = "black") +
     theme(legend.position = "none") +
     labs (title = "Storage (MCM)", y = NULL, x = NULL) +
@@ -130,14 +133,14 @@ plot_firomax_output <- function(output_tables){
 ```{r}
 library(dplyr)
 
-schedule_release(max_release = 10, min_release = 0) -> firomax_output_2
+schedule_release(max_release = 10, min_release = 0) -> fisch_output_2
 
 bind_rows(
-  firomax_output %>% mutate(run = "default"),
-  firomax_output_2 %>% mutate(run = "flexible release")
+  fisch_output %>% mutate(run = "default"),
+  fisch_output_2 %>% mutate(run = "flexible release")
 ) -> output_tables
 
-plot_firomax_output(output_tables = output_tables)
+plot_fisch_output(output_tables = output_tables)
 
 
 ```
