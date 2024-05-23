@@ -12,7 +12,7 @@ License: BSD 2-Clause + file LICENSE
 Encoding: UTF-8
 LazyData: true
 Roxygen: list(markdown = TRUE)
-RoxygenNote: 7.2.1
+RoxygenNote: 7.3.1
 SystemRequirements:
 Imports: dplyr, purrr, tidyr
 Suggests: 

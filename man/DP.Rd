@@ -10,6 +10,7 @@ DP(
   S_upper_limit,
   S_lower_limit,
   R_disc_x,
+  maxrelease_gen,
   S_states,
   State_mat,
   S_end_state,
@@ -17,7 +18,8 @@ DP(
   Rev_to_go,
   Bellman,
   Policy,
-  use_storage_target
+  use_storage_target,
+  storage_target_weight = 1e+06
 )
 }
 \arguments{

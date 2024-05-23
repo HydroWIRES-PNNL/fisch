@@ -8,6 +8,7 @@ simulate_DP_policy(
   n_periods,
   release_policy,
   R_disc_x,
+  maxrelease_gen,
   R,
   Q,
   S,

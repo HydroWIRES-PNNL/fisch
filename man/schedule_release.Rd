@@ -16,12 +16,14 @@ schedule_release(
   target_end_of_week_storage = TEST_target_end_of_week_storage,
   max_release = TEST_max_release,
   min_release = TEST_min_release,
+  maxrelease_gen = NULL,
   discretization_step = 0.2,
-  use_storage_target = TRUE
+  use_storage_target = TRUE,
+  storage_target_weight = 1e+06
 )
 }
 \arguments{
-\item{mode}{"single_fixed" => single forecast used at start of week; release is based on that forecast | "single_adaptive" => single forecast used at start of week, but release responds to policy during simulation (i.e., updates with storage) | "rolling_adaptive" => policy is updated daily with new forecast information; simulation is rolling horizon.}
+\item{mode}{"single_fixed" => single forecast used at start of week; release is based on that forecast | "single_adaptive" => single forecast used at start of week, but release responds to policy during simulation (i.e., updates with storage) | "rolling_adaptive" => policy is updated daily with new forecast information; simulation is rolling horizon | "day_ahead" => rolling horizon; within-day schedule fixed in simulation.}
 
 \item{inflow}{actual inflow time series.}
 
@@ -35,13 +37,17 @@ schedule_release(
 
 \item{target_end_of_week_storage}{storage level targeted for end of week}
 
-\item{max_release}{maximum}
+\item{max_release}{maximum overall release; can be physically determined, or operationally and week-specific}
 
-\item{min_release}{minimum}
+\item{min_release}{minimum overall release; can be physically determined, or operationally and week-specific}
+
+\item{maxrelease_gen}{maximum power release}
 
 \item{discretization_step}{default 0.2. Other water volume variables (inflow, inflow_forecast, reservoir_capacity, etc.) must all be discretized at this level.}
 
 \item{use_storage_target}{T/F}
+
+\item{storage_target_weight}{optimization weight placed on storage target}
 
 \item{price_foreacst}{price forecast with same temporal resolution as inflow.}
 
