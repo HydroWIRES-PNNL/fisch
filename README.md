@@ -51,9 +51,11 @@ forecasts, and executed using actual inflow.
 
 Weekly revenue is determined by:
 
-$$R_w = \sum_{t=1}^{168} r_t C_{pw} p_t$$ where $r_t$ is the hourly
-release, $C_{pw}$ is the water-to-power conversion factor, and $p_t$ is
-the locational marginal price (LMP) for that hour.
+$$R_w = \sum_{t=1}^{168} r_t C_{pw} p_t$$
+
+where $r_t$ is the hourly release, $C_{pw}$ is the water-to-power
+conversion factor, and $p_t$ is the locational marginal price (LMP) for
+that hour.
 
 Dynamic programming is used to determine the optimal hourly release
 schedule that results in the most weekly revenue while also satisfying
@@ -82,7 +84,9 @@ adaptive*. *day-ahead*
 `FIScH` currently has two options to allow for greater flexibility in
 hydropower scheduling. These options allow for the decision space to be
 extended beyond the end of a week. Optimization of the schedule is still
-done week-by-week, but these options expand the decision space.
+done week-by-week, but these options allow for deviations from the
+storage target and including potential future value of carryover water
+in subsequent weeks.
 
 ### Storage Target Deviations
 
