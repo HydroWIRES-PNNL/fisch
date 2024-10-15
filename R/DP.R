@@ -15,13 +15,11 @@
 #' @param Bellman placeholder matrix for Bellman's function
 #' @param Policy placeholder matrix for release policy
 #'
-
 DP <- function(n_periods,
                inflow_forecast,
                S_upper_limit,
                S_lower_limit,
                R_disc_x,
-               maxrelease_gen,
                S_states,
                State_mat,
                S_end_state,
@@ -29,16 +27,12 @@ DP <- function(n_periods,
                Rev_to_go,
                Bellman,
                Policy,
-               use_storage_target,
-               storage_target_weight = 1e6){
+               use_storage_target){
 
   for (t in n_periods:1) {
     Release_mat <- matrix(rep(R_disc_x, length(S_states)),
                           ncol = length(R_disc_x), byrow = TRUE)
 
-    # create matrix of releases capped at max generation for use in revenue calcs
-    Release_mat2 <- Release_mat
-    Release_mat2[which(Release_mat2 > maxrelease_gen)] = maxrelease_gen
     Balance_mat <- State_mat + inflow_forecast[t]
     Balance_mat[which(Balance_mat < S_lower_limit)] <- NA
     #Balance_mat[which(Balance_mat > S_upper_limit)] <- NA
@@ -46,13 +40,13 @@ DP <- function(n_periods,
     Balance_mat[which(Balance_mat > S_upper_limit)] <- S_upper_limit
     Implied_S_state <- round(1 + (((Balance_mat - S_lower_limit) / (S_upper_limit - S_lower_limit)) * (length(S_states) - 1)))
 
-    Rev_mat <- Release_mat2 * price_forecast[t] # TODO: add in power value of water into calc
+    Rev_mat <- Release_mat * price_forecast[t]
     Rev_mat2 <- Rev_mat + matrix(Rev_to_go[Implied_S_state],
                                  nrow = length(S_states))
 
     # create penalty for deviation from target storage
     if(use_storage_target == T & t == n_periods){
-      -(storage_target_weight * abs(Implied_S_state - S_end_state) ^ 1) -> penalties
+      -(1e6 * abs(Implied_S_state - S_end_state) ^ 1) -> penalties
       Rev_mat2 <- Rev_mat2 + penalties
     }
 
@@ -60,11 +54,12 @@ DP <- function(n_periods,
 
     Rev_to_go <- apply(Rev_mat2, 1, max, na.rm = TRUE)
     Bellman[, t] <- Rev_to_go
-    Policy[, t] <- max.col(Rev_mat2, ties.method = "first") # apply(Rev_mat2, 1, which.max)
+    Policy[, t] <- max.col(Rev_mat2, ties.method = "first")#apply(Rev_mat2, 1, which.max)
   }
 
   return(Policy)
 }
+
 
 #' simulate_DP_policy
 #'
@@ -83,12 +78,11 @@ DP <- function(n_periods,
 #' @param Revenue revenue vector
 #' @param t_to_day timestep to day of week conversion
 #' @param Policy placeholder matrix for release policy
-
+#'
 simulate_DP_policy <- function(
     n_periods,
     release_policy,
     R_disc_x,
-    maxrelease_gen,
     R, Q, S, S_cap,
     S_states,
     Spill,
@@ -96,7 +90,7 @@ simulate_DP_policy <- function(
     MWh_per_MCM = MWh_per_MCM,
     Revenue,
     t_to_day
-){
+    ){
 
   for (t in 1:n_periods) {
 
@@ -127,6 +121,7 @@ simulate_DP_policy <- function(
       R[t] <- R_disc_x[R_policy[S_state, t]]
     }
 
+
     # release cannot exceed availability
     if(R[t] > Q[t] + S[t]) R[t] <- Q[t] + S[t]
 
@@ -139,7 +134,6 @@ simulate_DP_policy <- function(
       S[t + 1] <- max(0, S[t] - R[t] + Q[t])
     }
 
-    R_cap <- ifelse(R[t] > maxrelease_gen, maxrelease_gen, R[t])
     Revenue[t] <- R[t] * price_forecast[t] * MWh_per_MCM
 
   }
@@ -163,3 +157,4 @@ simulate_DP_policy <- function(
   )
 
 }
+
