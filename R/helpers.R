@@ -5,8 +5,6 @@
   any(abs(b-a) <= eps)
 }
 
-
-
 #' snap_to_disc
 #'
 #' @description Prepare model inputs by snapping to desired disretization level.
@@ -26,17 +24,15 @@ snap_to_disc <- function(x, discretization_step){
   }
 }
 
-#' convert_forecast_to_firomax_format
+#' convert_forecast_to_fisch_format
 #'
 #' @description Prepare model inputs by snapping to desired disretization level.
 #' @param forecast vector of forecasted inflows of length equal to length(inflow)
 #' @export
 #'
-convert_forecast_to_firomax_format <- function(forecast){
+convert_forecast_to_fisch_format <- function(forecast){
     matrix(
     c(inflow, rep(NA, 6 * length(forecast))),
     nrow = 7, byrow = TRUE
   )
 }
-
-

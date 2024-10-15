@@ -1,20 +1,21 @@
-Package: firomax
+Package: fisch
 Type: Package
-Title: Forecast Informed Reservoir Operations for MAXimum hydroelectric power sales
-Version: 0.1.0
-Author: Sean Turner
-Maintainer: Sean Turner <sean.turner@pnnl.gov>
-Description: firomax performs Dynamic Programming to optimize within week reservoir releases for maximum hydropower revenue.
-    Weekly release targets from the `ISTARF-CONUS` dataset may be used to soft-constrain operations.
-    Sub-daily release decisions are optimized in full-week or rolling-horizon mode for given deterministic price and streamflow forecasts.
+Title: Forecast Informed SCheduler for Hydropower
+Version: 0.3.0
+Authors@R: c(
+    person(given = "Sean WD", family = "Turner", role = c("aut"), email = "turnersw@ornl.gov"),
+    person(given = "Dan", family = "Broman", role = c("aut", "cre"), email = "daniel.broman@pnnl.gov")
+)
+Description: fisch is a hydropower scheduler that optimizes hourly releases within a week to maximize
+    hydropower revenue. Dynamic programing is used to identify the optimal release schedule given
+    hourly electricity prices, hourly inflow, and an end-of-week storage target that parameterizes
+    non-powered objectives and constraints.
 License: BSD 2-Clause + file LICENSE
 Encoding: UTF-8
 LazyData: true
 Roxygen: list(markdown = TRUE)
-RoxygenNote: 7.2.1
-LinkingTo: 
-    cpp11
-SystemRequirements: C++11
+RoxygenNote: 7.3.1
+SystemRequirements:
 Imports: dplyr, purrr, tidyr
 Suggests: 
     knitr,
