@@ -377,7 +377,7 @@ schedule_release <-  function(mode = "single_fixed",
         simulate_DP_policy(
           n_periods = n_periods,
           Q = inflow_forecast[day,][sim_period],
-          release_policy = lapply(release_policy_arch[1:7], function(x) x[, sim_period]),# subsetting to correct days happens inside function using 't_to_day' 
+          release_policy = lapply(release_policy[1:7], function(x) x[, sim_period]),# subsetting to correct days happens inside function using 't_to_day' 
           R_disc_x = R_disc_x,
           maxrelease_gen = maxrelease_gen,
           S_states = S_states,
