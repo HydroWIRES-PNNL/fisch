@@ -1,15 +1,6 @@
 
 <!-- README.md is generated from README.Rmd. Please edit that file -->
 
-```{r, include = FALSE}
-knitr::opts_chunk$set(
-  collapse = TRUE,
-  comment = "#>",
-  fig.path = "man/figures/README-",
-  out.width = "100%"
-)
-```
-
 # Forecast Informed Scheduler for Hydropower (FIScH)
 
 <!-- badges: start -->
@@ -75,7 +66,7 @@ negative weight if it is not satisfied.
 ## Modes
 
 `FIScH` has five modes of operation: *single_fixed*, *single_adaptive*, *rolling_adaptive*, 
-*day_ahead*, and *day_ahead_full
+*day_ahead*, and *day_ahead_full*
 
 - single_fixed: developes one optimized schedule for each week using an inflow forecast issued at the start of the week
 and executes the schedule using observed inflow
