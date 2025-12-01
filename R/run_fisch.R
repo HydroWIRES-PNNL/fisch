@@ -16,9 +16,7 @@
 #' @param discretization_step default 0.2. Other water volume variables (inflow, inflow_forecast, reservoir_capacity, etc.) must all be discretized at this level.
 #' @param use_storage_target T/F
 #' @param storage_target_weight optimization weight placed on storage target
-#' @import dplyr
-#' @import purrr
-#' @import tidyr
+#' @import tidyverse
 #' @export
 #'
 
@@ -37,7 +35,7 @@ schedule_release <-  function(mode = "single_fixed",
                               discretization_step = 0.2,
                               use_storage_target = TRUE,
                               storage_target_weight = 1e6){
-
+  
   length(inflow) -> n_periods
   stopifnot(length(price_forecast) == n_periods)
 
@@ -158,8 +156,8 @@ schedule_release <-  function(mode = "single_fixed",
   }
 
   # ROLLING-ADAPTIVE AND DAY_AHEAD -----------
-  if(mode == "rolling_adaptive" | mode == "day_ahead"){
-
+  if(mode == "rolling_adaptive" | mode == "day_ahead" | mode == "day_ahead_full"){
+    
     1:7 %>% map(function(horizon){
 
       Rev_to_go <- vector("numeric", length = length(S_states))
@@ -186,11 +184,7 @@ schedule_release <-  function(mode = "single_fixed",
     }) -> release_policy
 
   }
-
-
   # ===================================================================================
-
-
 
   # SIMULATE POLICY--------------------------------------------------------------------
 
@@ -352,7 +346,83 @@ schedule_release <-  function(mode = "single_fixed",
       tibble(time = n_periods + 1,
              storage_sim = last(daily_initial_S))
     )
-
+  }
+  
+  # day_ahead mode with all schedules returned
+  if(mode == "day_ahead_full"){
+    
+    daily_initial_S <- c(initial_storage, rep(NA, 6))
+    periods_per_day <- 24
+    sim_daily_update <- tibble()
+    n_days = 7
+    for (day in 1:n_days){
+      
+      # set end period to always be the end of the week
+      day_end_period =  periods_per_day * n_days 
+      
+      # start period is start of selected day
+      day_start_period = (day * periods_per_day) - (periods_per_day - 1) 
+      
+      # indices of sim period
+      sim_period = day_start_period:day_end_period 
+      
+      # number of periods is length of sim period
+      n_periods = length(sim_period)
+      
+      # get schedule with forecast
+      simulate_DP_policy(
+        n_periods = n_periods,
+        Q = inflow_forecast[day,][sim_period],
+        release_policy = lapply(release_policy[1:7], function(x) x[, sim_period]),# subsetting to correct days happens inside function using 't_to_day' 
+        R_disc_x = R_disc_x,
+        maxrelease_gen = maxrelease_gen,
+        S_states = S_states,
+        S = c(daily_initial_S[day], vector("numeric", n_periods - 1)),
+        S_cap = reservoir_capacity,
+        R = vector("numeric", n_periods),
+        Spill = vector("numeric", n_periods),
+        price_forecast = price_forecast[sim_period],
+        MWh_per_MCM = MWh_per_MCM,
+        Revenue = vector("numeric", n_periods),
+        # "day" in tibble below is set to 1 to grab [[1]] from release policy,
+        # ... which must be a list object to initiate policy.
+        t_to_day = tibble(t = sim_period, day = rep(day:7, each = periods_per_day))
+      ) -> day_schedule_bid
+      
+      # add day column to schedule; update column to reflect that this was run with inflow forecasts and not actuals
+      day_schedule_bid = day_schedule_bid %>%
+        mutate(day = day, type = 'forecast',
+               time = c(sim_period, max(sim_period) + 1))
+      
+      # simulate schedule with actual flow - schedules from day to end of week; schedules beyond the first 24hrs are rescheduled
+      simulate_DP_policy(
+        n_periods = n_periods,
+        Q = inflow[sim_period],
+        release_policy = day_schedule_bid[["release_turbine"]],
+        R_disc_x = R_disc_x,
+        maxrelease_gen = maxrelease_gen,
+        S_states = S_states,
+        S = c(daily_initial_S[day], vector("numeric", n_periods - 1)),
+        S_cap = reservoir_capacity,
+        R = vector("numeric", n_periods),
+        Spill = vector("numeric", n_periods),
+        price_forecast = price_forecast[sim_period],
+        MWh_per_MCM = MWh_per_MCM,
+        Revenue = vector("numeric", n_periods),
+        t_to_day = tibble(t = sim_period, day = rep(day:7, each = periods_per_day))
+      ) -> day_schedule_actual
+      
+      # add day column to schedule
+      day_schedule_actual = day_schedule_actual %>%
+        mutate(day = day, type = 'actual',
+               time = c(sim_period, max(sim_period) + 1))
+      
+      sim_daily_update <- bind_rows(sim_daily_update, day_schedule_bid,
+                                    day_schedule_actual)
+      daily_initial_S[day + 1] = day_schedule_actual[["storage_sim"]][periods_per_day + 1] # always pull 25th hour as it is the start of the next day
+    }
+    
+    schedule = sim_daily_update
   }
 
   # ===================================================================================
@@ -373,8 +443,6 @@ schedule_release <-  function(mode = "single_fixed",
       )
     )
   }
-
   return(schedule)
-
 }
 

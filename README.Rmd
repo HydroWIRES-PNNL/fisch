@@ -80,17 +80,26 @@ negative weight if it is not satisfied.
 
 ## Modes
 
-`FIScH` has three modes of operation: *fixed*, *adaptive*, and *rolling adaptive*. 
-*day-ahead*
+`FIScH` has five modes of operation: *single_fixed*, *single_adaptive*, *rolling_adaptive*, 
+*day_ahead*, and *day_ahead_full
 
-- fixed: optimizes releases for each week once using fixed inflow forecasts and
-executes the schedule using observed inflow
+- single_fixed: developes one optimized schedule for each week using an inflow forecast issued at the start of the week
+and executes the schedule using observed inflow
 
-- day-ahead: optimizes the hydropower schedule, and re-optimizes the schedule each day of the week with updated inflow forecasts. The schedule is still executed each day using observed inflow
+- single_adaptive: same as single_fixed except that as the schedule is executed with observed inflow it can adapt to
+changes in storage caused by forecast errors to ensure that the end-of-week storage target is satisfied
 
-- adaptive
-- rolling adaptive
+- single_both: runs both single_fixed and single_adaptive for comparison
 
+- rolling adaptive: developes optimized schedules re-optimized each day with revised inflow forecasts issued each day.
+as the schedule is executed with observed inflow it can adapt to changes in storage caused by forecast errors to ensure that 
+the end-of-week storage target is satisfied
+
+- day_ahead: evelopes optimized schedules re-optimized each day with revised inflow forecasts issued each day. the schedule is executed
+with observed flows and fixed until the following day
+
+- day_ahead_full: same as day_ahead mode but it saves out the schedules developed each day of the week to examine how the 
+schedules change as the inflow forecasts are updated and the schedule is re-optimized
 
 ## Flexibility Options
 

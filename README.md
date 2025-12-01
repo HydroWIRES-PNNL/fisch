@@ -1,9 +1,19 @@
 
 <!-- README.md is generated from README.Rmd. Please edit that file -->
 
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  fig.path = "man/figures/README-",
+  out.width = "100%"
+)
+```
+
 # Forecast Informed Scheduler for Hydropower (FIScH)
 
 <!-- badges: start -->
+
 <!-- badges: end -->
 
 FIScH is a hydropower scheduler that optimizes hourly releases within a
@@ -21,13 +31,13 @@ You can install the development version of FIScH from GitHub:
 3.  Install `fisch` from GitHub
     `install_github("HydroWIRES-PNNL/fisch")`
 
-``` r
+```{r, eval = FALSE}
 install.packages("devtools")
 library(devtools)
 install_github("HydroWIRES-PNNL/fisch")
 ```
 
-``` r
+```{r}
 library(fisch)
 ```
 
@@ -51,53 +61,57 @@ forecasts, and executed using actual inflow.
 
 Weekly revenue is determined by:
 
-$$R_w = \sum_{t=1}^{168} r_t C_{pw} p_t$$
+$$R_w = \sum_{t=1}^{168} r_t C_{pw} p_t$$ 
 
-where $r_t$ is the hourly release, $C_{pw}$ is the water-to-power
-conversion factor, and $p_t$ is the locational marginal price (LMP) for
-that hour.
+where $r_t$ is the hourly
+release, $C_{pw}$ is the water-to-power conversion factor, and $p_t$ is
+the locational marginal price (LMP) for that hour.
 
-Dynamic programming is used to determine the optimal hourly release
-schedule that results in the most weekly revenue while also satisfying
-and end-of-week storage target. The storage target is not provided as a
-constraint, but rather an objective, with a large negative weight if it
-is not satisfied.
+Dynamic programming is used to determine the optimal hourly release schedule that 
+results in the most weekly revenue while also satisfying and end-of-week storage target.
+The storage target is not provided as a constraint, but rather an objective, with a large
+negative weight if it is not satisfied.
 
 ## Modes
 
-`FIScH` has three modes of operation: *fixed*, *adaptive*, and *rolling
-adaptive*. *day-ahead*
+`FIScH` has five modes of operation: *single_fixed*, *single_adaptive*, *rolling_adaptive*, 
+*day_ahead*, and *day_ahead_full
 
-- fixed: optimizes releases for each week once using fixed inflow
-  forecasts and executes the schedule using observed inflow
+- single_fixed: developes one optimized schedule for each week using an inflow forecast issued at the start of the week
+and executes the schedule using observed inflow
 
-- day-ahead: optimizes the hydropower schedule, and re-optimizes the
-  schedule each day of the week with updated inflow forecasts. The
-  schedule is still executed each day using observed inflow
+- single_adaptive: same as single_fixed except that as the schedule is executed with observed inflow it can adapt to
+changes in storage caused by forecast errors to ensure that the end-of-week storage target is satisfied
 
-- adaptive
+- single_both: runs both single_fixed and single_adaptive for comparison
 
-- rolling adaptive
+- rolling adaptive: developes optimized schedules re-optimized each day with revised inflow forecasts issued each day.
+as the schedule is executed with observed inflow it can adapt to changes in storage caused by forecast errors to ensure that 
+the end-of-week storage target is satisfied
+
+- day_ahead: evelopes optimized schedules re-optimized each day with revised inflow forecasts issued each day. the schedule is executed
+with observed flows and fixed until the following day
+
+- day_ahead_full: same as day_ahead mode but it saves out the schedules developed each day of the week to examine how the 
+schedules change as the inflow forecasts are updated and the schedule is re-optimized
 
 ## Flexibility Options
 
 `FIScH` currently has two options to allow for greater flexibility in
 hydropower scheduling. These options allow for the decision space to be
-extended beyond the end of a week. Optimization of the schedule is still
-done week-by-week, but these options allow for deviations from the
-storage target and including potential future value of carryover water
-in subsequent weeks.
+extended beyond the end of a week. Optimization of the schedule is still done 
+week-by-week, but these options allow for deviations from the storage target
+and including potential future value of carryover water in subsequent weeks.
 
 ### Storage Target Deviations
 
 `FIScH` retains a constraint that ensures that storage targets are
 satisfied by the end of a month, but allow for deviations from
 end-of-week storage targets for the first 3 weeks in a month. This
-deviation is specified by a user-defined fraction deviation from the
-storage target where no penalty is imposed. Typically this fraction
-deviation is largest for the first week in a month, and narrows for
-weeks 2 and 3, before returning to the original storage target deviation
-penalty in week 4.
+deviation is specified by a user-defined fraction deviation from the storage target where
+no penalty is imposed. Typically this fraction deviation is largest for the
+first week in a month, and narrows for weeks 2 and 3, before returning to
+the original storage target deviation penalty in week 4.
 
 ### Carryover Storage
 
@@ -105,37 +119,22 @@ penalty in week 4.
 can represent hedging in hydropower scheduling by retaining additional
 water in one week so that it can be used in the following week.
 Carryover storage is valued by multiplying the volume of storage by an
-average LMP for the following week, and a user-defined weighting factor
-that scales future revenue to weight it against revenue in the current
-week when optimizing releases.
+average LMP for the following week, and a user-defined weighting factor that
+scales future revenue to weight it against revenue in the current week when optimizing
+releases.
 
 ## Example
 
 `fisch` contains an example set of inputs that are set as defaults in
 the `schedule_release` function:
 
-``` r
+```{r scedule_release}
 
 # run FIScH with default set of inputs
 fisch_output <- schedule_release()
 
 # view output
 fisch_output
-#> # A tibble: 29 × 7
-#>     time storage_sim release_spill release_turbine benefit_revenue price_price
-#>    <int>       <dbl>         <dbl>           <dbl>           <dbl>       <dbl>
-#>  1     1       1000              0               1            6568       16.4 
-#>  2     2       1000              0               1            9308       23.3 
-#>  3     3       1000.             0               1            8052       20.1 
-#>  4     4       1000.             0               1           10004       25.0 
-#>  5     5       1001.             0               1            5664       14.2 
-#>  6     6       1001              0               1            2912        7.28
-#>  7     7       1001.             0               1           -3672       -9.18
-#>  8     8       1002.             0               1           10660       26.6 
-#>  9     9       1002.             0               1            8672       21.7 
-#> 10    10       1002.             0               1           11216       28.0 
-#> # ℹ 19 more rows
-#> # ℹ 1 more variable: inflow_actual <dbl>
 ```
 
 Although `FIScH` does not include any visualization functions, the
@@ -143,7 +142,7 @@ output table is designed to be easily processed using `ggplot2`. The
 following function is recommended for comparing multiple `FIScH` runs in
 a single display.
 
-``` r
+```{r}
 library(ggplot2) # for plotting
 library(patchwork) # for combining plots
 
@@ -213,17 +212,8 @@ plot_fisch_output <- function(output_tables){
 }
 ```
 
-``` r
+```{r}
 library(dplyr)
-#> Warning: package 'dplyr' was built under R version 4.2.3
-#> 
-#> Attaching package: 'dplyr'
-#> The following objects are masked from 'package:stats':
-#> 
-#>     filter, lag
-#> The following objects are masked from 'package:base':
-#> 
-#>     intersect, setdiff, setequal, union
 
 schedule_release(max_release = 10, min_release = 0) -> fisch_output_2
 
@@ -233,9 +223,7 @@ bind_rows(
 ) -> output_tables
 
 plot_fisch_output(output_tables = output_tables)
-#> Warning: Removed 2 rows containing missing values (`geom_line()`).
-#> Warning: Removed 1 row containing missing values (`geom_line()`).
-#> Warning: Removed 4 rows containing missing values (`geom_line()`).
 ```
+
 
 <img src="man/figures/README-unnamed-chunk-5-1.png" width="100%" />

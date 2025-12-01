@@ -1,23 +1,22 @@
 Package: fisch
 Type: Package
-Title: Forecast Informed SCheduler for Hydropower
-Version: 0.3.0
-Authors@R: c(
-    person(given = "Sean WD", family = "Turner", role = c("aut"), email = "turnersw@ornl.gov"),
-    person(given = "Dan", family = "Broman", role = c("aut", "cre"), email = "daniel.broman@pnnl.gov")
-)
-Description: fisch is a hydropower scheduler that optimizes hourly releases within a week to maximize
-    hydropower revenue. Dynamic programing is used to identify the optimal release schedule given
-    hourly electricity prices, hourly inflow, and an end-of-week storage target that parameterizes
-    non-powered objectives and constraints.
+Title: Forecast Informed Scheduler for Hydropower
+Version: 0.5.0
+Author: Dan Broman [aut], Sean Turner [aut, cre]
+Authors@R: 
+    c(person(given = "Dan", family = "Broman", email = "daniel.broman@pnnl.gov", role = "aut"),
+      person(given = "Jane", family = "Smith", email = "jane.smith@example.com", role = c("aut", "cre")),
+      person(given = "Alex", family = "Brown", role = "ctb"))
+Maintainer: Dan Broman <daniel.broman@pnnl.gov>
+Description: Fisch is a hydropower scheduler that optimizes hourly releases within a week to 
+    maximize hydropower revenue. Dynamic programming is used to identify the optimal release 
+    schedule given hourly electricity prices, hourly inflow, and an end-of-week storage target 
+    that parameterizes non-powered objectives and constraints.
 License: BSD 2-Clause + file LICENSE
+Imports: 
+    dplyr,
+    tidyr,
+    purrr,
+    ggplot2
 Encoding: UTF-8
 LazyData: true
-Roxygen: list(markdown = TRUE)
-RoxygenNote: 7.3.1
-SystemRequirements:
-Imports: dplyr, purrr, tidyr
-Suggests: 
-    knitr,
-    rmarkdown
-VignetteBuilder: knitr
