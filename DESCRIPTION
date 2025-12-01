@@ -1,7 +1,7 @@
 Package: fisch
 Type: Package
 Title: Forecast Informed Scheduler for Hydropower
-Version: 0.5.0
+Version: 1.1.0
 Author: Dan Broman [aut], Sean Turner [aut, cre]
 Authors@R: 
     c(person(given = "Dan", family = "Broman", email = "daniel.broman@pnnl.gov", role = "aut"),
