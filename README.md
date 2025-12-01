@@ -66,7 +66,7 @@ negative weight if it is not satisfied.
 ## Modes
 
 `FIScH` has five modes of operation: *single_fixed*, *single_adaptive*, *rolling_adaptive*, 
-*day_ahead*, and *day_ahead_full
+*day_ahead*, and *day_ahead_full*
 
 - single_fixed: developes one optimized schedule for each week using an inflow forecast issued at the start of the week
 and executes the schedule using observed inflow
